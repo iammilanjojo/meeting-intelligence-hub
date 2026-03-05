@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+<meta charset="UTF-8">
+<title>Meeting Intelligence Hub</title>
+
+<style>
+
+body{
+font-family: Arial, Helvetica, sans-serif;
+background:#f4f6fb;
+margin:0;
+padding:0;
+}
+
+.header{
+background:#1f2937;
+color:white;
+padding:20px;
+font-size:22px;
+font-weight:bold;
+}
+
+.container{
+max-width:1000px;
+margin:auto;
+padding:30px;
+}
+
+.card{
+background:white;
+padding:25px;
+margin-bottom:25px;
+border-radius:10px;
+box-shadow:0 4px 12px rgba(0,0,0,0.08);
+}
+
+textarea{
+width:100%;
+height:140px;
+padding:10px;
+border-radius:6px;
+border:1px solid #ddd;
+resize:none;
+font-size:14px;
+}
+
+button{
+background:#2563eb;
+color:white;
+border:none;
+padding:10px 18px;
+border-radius:6px;
+cursor:pointer;
+font-size:14px;
+margin-top:10px;
+}
+
+button:hover{
+background:#1d4ed8;
+}
+
+#summary{
+    background:#f9fafb;
+    padding:15px;
+    border-radius:6px;
+    margin-top:10px;
+
+    white-space:pre-wrap;
+    word-spacing:normal;
+    letter-spacing:normal;
+    text-align:left;
+    line-height:1.6;
+    font-size:15px;
+}
+
+ul{
+margin-top:10px;
+}
+
+.loading{
+color:#2563eb;
+font-weight:bold;
+}
+
+.searchBox{
+width:100%;
+padding:10px;
+border:1px solid #ddd;
+border-radius:6px;
+margin-top:10px;
+}
+
+#actions{
+    line-height:1.6;
+    letter-spacing:normal;
+    word-spacing:normal;
+}
+
+#answer{
+    background:#f9fafb;
+    padding:10px;
+    border-radius:6px;
+    margin-top:10px;
+    line-height:1.6;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="header">
+Meeting Intelligence Hub
+</div>
+
+<div class="container">
+
+<div class="card">
+
+<h3>Upload Zoom / Teams Transcript</h3>
+
+<input type="file" id="fileInput">
+
+<br>
+
+<button onclick="uploadFile()">Upload Transcript</button>
+
+</div>
+
+<div class="card">
+
+<h3>Paste Meeting Transcript</h3>
+
+<textarea id="transcript" placeholder="Paste meeting transcript here..."></textarea>
+
+<br>
+
+<button onclick="analyzeMeeting()">Analyze Meeting</button>
+
+</div>
+
+<div class="card">
+
+<h3>Summary</h3>
+
+<div id="summary">No summary yet</div>
+
+<br>
+
+<button onclick="copySummary()">Copy Summary</button>
+
+<button onclick="downloadNotes()">Download Notes</button>
+
+</div>
+
+<div class="card">
+
+<h3>Action Items</h3>
+
+<ul id="actions"></ul>
+
+</div>
+
+<div class="card">
+
+<h3>Ask Questions About Meeting</h3>
+
+<input class="searchBox" id="question" placeholder="Ask something like 'What was Milan responsible for?'">
+
+<br>
+
+<button onclick="askQuestion()">Ask</button>
+
+<p id="answer"></p>
+
+</div>
+
+</div>
+
+<script>
+
+let meetingTranscript = ""
+
+async function uploadFile(){
+
+const file = document.getElementById("fileInput").files[0]
+
+if(!file){
+alert("Please select a file first")
+return
+}
+
+const formData = new FormData()
+
+formData.append("file",file)
+
+try{
+
+const response = await fetch("http://127.0.0.1:8000/upload-transcript",{
+method:"POST",
+body:formData
+})
+
+const data = await response.json()
+
+document.getElementById("transcript").value = data.transcript
+
+meetingTranscript = data.transcript
+
+}catch(error){
+
+alert("Failed to upload file. Make sure backend is running.")
+
+}
+
+}
+
+async function analyzeMeeting(){
+
+const transcript = document.getElementById("transcript").value
+
+if(transcript.trim() === ""){
+alert("Please paste a transcript first")
+return
+}
+
+meetingTranscript = transcript
+
+document.getElementById("summary").innerHTML = "<span class='loading'>Analyzing meeting...</span>"
+
+const response = await fetch("http://127.0.0.1:8000/analyze-meeting",{
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify({transcript})
+})
+
+const data = await response.json()
+
+document.getElementById("summary").innerText = data.summary
+
+let actionsHTML = ""
+
+data.action_items.forEach(item=>{
+actionsHTML += "<li>"+item+"</li>"
+})
+
+document.getElementById("actions").innerHTML = actionsHTML
+
+}
+
+function copySummary(){
+
+const summary = document.getElementById("summary").innerText
+
+navigator.clipboard.writeText(summary)
+
+alert("Summary copied")
+
+}
+
+function downloadNotes(){
+
+const summary = document.getElementById("summary").innerText
+
+const actions = document.getElementById("actions").innerText
+
+const text = "MEETING SUMMARY\n\n"+summary+"\n\nACTION ITEMS\n\n"+actions
+
+const blob = new Blob([text],{type:"text/plain"})
+
+const a = document.createElement("a")
+
+a.href = URL.createObjectURL(blob)
+
+a.download = "meeting_notes.txt"
+
+a.click()
+
+}
+
+async function askQuestion(){
+
+const question = document.getElementById("question").value
+
+if(question.trim() === ""){
+return
+}
+
+const response = await fetch("http://127.0.0.1:8000/ask",{
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+transcript:meetingTranscript,
+question:question
+})
+})
+
+const data = await response.json()
+
+document.getElementById("answer").innerText = data.answer
+
+}
+
+</script>
+
+</body>
+</html>
