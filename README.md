@@ -9,23 +9,23 @@ Meeting Intelligence Hub is a web application that automatically analyzes meetin
 The system processes the transcript and automatically generates a concise summary, identifies action items, highlights key discussion topics, and allows users to ask specific questions about the meeting. This helps teams quickly understand the outcomes of meetings without reading the entire transcript.
 
 *Tech Stack:
-Frontend
- HTML
- CSS
+Frontend:
+ HTML,
+ CSS,
  JavaScript
 
-Backend
- Python
+Backend:
+ Python,
  FastAPI
 
-Libraries & Tools
- PyPDF (for reading PDF transcripts)
- Regex (for extracting action items and topics)
+Libraries & Tools:
+ PyPDF (for reading PDF transcripts),
+ Regex (for extracting action items and topics),
  Uvicorn (ASGI server)
 
-Development Tools
- Visual Studio Code
- Git
+Development Tools:
+ Visual Studio Code,
+ Git,
  GitHub
 
  *Setup Instructions:
