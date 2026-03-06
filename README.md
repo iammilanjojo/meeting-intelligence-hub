@@ -31,7 +31,7 @@ Development Tools
  *Setup Instructions:
 
 1. Clone the Repository
-git clone https://github.com/your-username/meeting-intelligence-hub.git
+git clone https://github.com/iammilanjojo/meeting-intelligence-hub.git
 Navigate to the project folder
 cd meeting-intelligence-hub
 
